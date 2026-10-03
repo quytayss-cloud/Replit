@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replit Clone Pro - AI Powered Workspace & Token Guard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        replit: {
+                            dark: '#0e1525',
+                            darker: '#090d16',
+                            panel: '#121c31',
+                            border: '#1e293b',
+                            accent: '#f26522',
+                            accentHover: '#d95318',
+                            blue: '#0099ff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CodeMirror for Editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <!-- JSZip for exporting zip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        .CodeMirror { height: 100%; font-family: 'Fira Code', monospace; font-size: 14px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="bg-replit-dark text-slate-100 h-screen flex flex-col overflow-hidden font-sans select-none">
+
+    <!-- TOP NAVBAR -->
+    <header class="bg-replit-darker border-b border-replit-border h-14 flex items-center justify-between px-4 shrink-0 z-20">
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="switchView('dashboard')">
+                <div class="bg-replit-accent text-white p-2 rounded-lg font-bold flex items-center justify-center w-8 h-8 shadow-lg shadow-orange-500/20">
+                    <i class="fa-solid fa-code text-sm"></i>
+                </div>
+                <span class="font-bold text-lg tracking-wider bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">REPLIT PRO <span class="text-xs px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30">ULTIMATE FREE</span></span>
+            </div>
+            <div class="h-5 w-px bg-slate-800"></div>
+            <div class="flex items-center space-x-2 text-sm text-slate-400">
+                <span id="current-project-name" class="font-medium text-slate-200">Tạp Hóa Công Nghệ 99K Web</span>
+                <span class="px-2 py-0.5 text-xs bg-slate-800 rounded border border-slate-700 text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Đang đồng bộ</span>
+            </div>
+        </div>
+
+        <!-- CENTER TABS/CONTROLS -->
+        <div class="hidden md:flex items-center bg-replit-dark px-3 py-1.5 rounded-lg border border-replit-border space-x-3 text-xs">
+            <span class="text-slate-400"><i class="fa-solid fa-microchip text-orange-400 mr-1"></i> AI Model: <strong class="text-slate-200">Claude 3.5 Sonnet (Max Tier)</strong></span>
+            <span class="text-slate-600">|</span>
+            <span class="text-slate-400"><i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Token Guard: <strong id="token-guard-status" class="text-emerald-400">Bật (Tiết kiệm 85%)</strong></span>
+        </div>
+
+        <!-- RIGHT ACTIONS -->
+        <div class="flex items-center space-x-3">
+            <button onclick="openTokenManager()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700 flex items-center space-x-2 transition">
+                <i class="fa-solid fa-coins text-amber-400"></i>
+                <span id="token-count-badge">Token: 10,000/10,000</span>
+            </button>
+            <button onclick="exportProjectZip()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700 flex items-center space-x-2 transition">
+                <i class="fa-solid fa-download text-sky-400"></i>
+                <span>Tải Zip</span>
+            </button>
+            <button onclick="runProject()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-2 shadow-lg shadow-emerald-600/30 transition">
+                <i class="fa-solid fa-play"></i>
+                <span>Chạy App</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" class="flex-1 flex overflow-hidden relative">
+
+        <!-- SIDEBAR / FILE EXPLORER -->
+        <aside class="w-64 bg-replit-darker border-r border-replit-border flex flex-col shrink-0 select-none">
+            <div class="p-3 border-b border-replit-border flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <span><i class="fa-solid fa-folder-tree mr-1.5 text-orange-400"></i> Tệp Dự Án</span>
+                <div class="flex space-x-1">
+                    <button onclick="createNewFileModal()" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Thêm file mới"><i class="fa-solid fa-file-circle-plus"></i></button>
+                    <button onclick="refreshFileTree()" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Làm mới"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </div>
+            <div id="file-list" class="flex-1 overflow-y-auto p-2 space-y-1 text-sm">
+                <!-- Dynamically populated files -->
+            </div>
+            <div class="p-3 border-t border-replit-border bg-replit-panel/50 text-xs">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span>Dung lượng lưu trữ</span>
+                    <span class="text-slate-200">1.2 MB / 1 GB</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-orange-500 h-full w-[2%]"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER: CODE EDITOR & PREVIEW -->
+        <main class="flex-1 flex flex-col min-w-0 bg-replit-dark">
+            <!-- TAB BAR FOR OPEN FILES -->
+            <div id="editor-tabs" class="bg-replit-darker border-b border-replit-border flex items-center overflow-x-auto h-10 shrink-0">
+                <!-- Dynamically populated tabs -->
+            </div>
+
+            <!-- EDITOR & PREVIEW SPLIT -->
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <!-- CODE EDITOR PANE -->
+                <div class="flex-1 flex flex-col min-w-0 border-r border-replit-border">
+                    <div class="bg-replit-panel px-4 py-1.5 border-b border-replit-border text-xs text-slate-400 flex items-center justify-between shrink-0">
+                        <span id="active-file-path" class="font-mono text-slate-300">index.html</span>
+                        <div class="flex items-center space-x-3 text-xs">
+                            <span class="text-emerald-400"><i class="fa-solid fa-check-circle mr-1"></i> Tự động lưu</span>
+                            <span class="text-slate-400">UTF-8</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative overflow-hidden">
+                        <textarea id="code-editor-textarea"></textarea>
+                    </div>
+                </div>
+
+                <!-- PREVIEW / OUTPUT PANE -->
+                <div class="w-full md:w-[45%] flex flex-col bg-slate-950 border-t md:border-t-0 border-replit-border">
+                    <div class="bg-replit-panel px-4 py-1.5 border-b border-replit-border text-xs text-slate-400 flex items-center justify-between shrink-0">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-desktop text-orange-400"></i>
+                            <span class="font-bold text-slate-300">Trình xem trước & Console</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="switchPreviewTab('preview')" id="tab-btn-preview" class="px-2 py-0.5 rounded bg-slate-800 text-white font-medium">Giao diện</button>
+                            <button onclick="switchPreviewTab('console')" id="tab-btn-console" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-400">Console Log</button>
+                            <button onclick="refreshPreview()" class="p-1 hover:bg-slate-800 rounded text-slate-300 ml-2" title="Tải lại preview"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                    </div>
+                    <div id="preview-container" class="flex-1 relative bg-white overflow-hidden">
+                        <iframe id="app-preview-frame" class="w-full h-full border-0"></iframe>
+                    </div>
+                    <div id="console-container" class="flex-1 relative bg-slate-950 p-3 font-mono text-xs overflow-y-auto hidden text-emerald-400 space-y-1">
+                        <div class="text-slate-500">[System] Khởi tạo Replit Clone Engine v3.2 thành công.</div>
+                        <div class="text-slate-500">[System] Trình thông dịch JavaScript & Web Worker sẵn sàng.</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT PANEL: AI AGENT & TOKEN GUARD -->
+        <aside class="w-80 bg-replit-darker border-l border-replit-border flex flex-col shrink-0 select-none">
+            <div class="p-3 border-b border-replit-border flex items-center justify-between bg-replit-panel/30">
+                <div class="flex items-center space-x-2">
+                    <div class="w-6 h-6 rounded bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs shadow">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <span class="font-bold text-sm text-slate-200">Replit AI Agent Pro</span>
+                </div>
+                <span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] font-bold rounded border border-purple-500/30">MAX TIER</span>
+            </div>
+
+            <!-- TOKEN GUARD CONTROL CARD -->
+            <div class="p-3 bg-slate-900/80 border-b border-replit-border text-xs space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-amber-400 flex items-center"><i class="fa-solid fa-shield-cat mr-1.5"></i> Token Guard Optimizer</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="token-guard-toggle" checked class="sr-only peer" onchange="toggleTokenGuard()">
+                        <div class="w-7 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
+                <p class="text-slate-400 text-[11px] leading-relaxed">Tự động nén ngữ cảnh, loại bỏ bình luận dư thừa và tối ưu hóa prompt để <strong>tránh thất thoát 85% token</strong> khi AI viết code.</p>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">Đã tiết kiệm</div>
+                        <div id="tokens-saved-counter" class="font-bold text-emerald-400">45,280 tokens</div>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">Hiệu suất AI</div>
+                        <div class="font-bold text-sky-400">99.8% Chuẩn xác</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHAT / PROMPT INTERACTION -->
+            <div id="ai-chat-messages" class="flex-1 p-3 overflow-y-auto space-y-3 text-xs">
+                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1.5">
+                    <div class="font-bold text-purple-400 flex items-center"><i class="fa-solid fa-robot mr-1.5"></i> Replit AI Agent</div>
+                    <p class="text-slate-300 leading-relaxed">Xin chào anh! Em đã kích hoạt bản Replit Clone với cấu hình trả phí cao nhất (Claude 3.5 Sonnet + Token Guard). Anh muốn yêu cầu em viết tính năng gì, sửa code hay tạo app nào ngay bây giờ ạ?</p>
+                </div>
+            </div>
+
+            <!-- PROMPT INPUT BOX -->
+            <div class="p-3 border-t border-replit-border bg-replit-darker space-y-2">
+                <div class="relative">
+                    <textarea id="ai-prompt-input" rows="2" placeholder="Nhập yêu cầu tạo app, thêm tính năng (VD: Thêm giỏ hàng, bảng doanh thu...)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 resize-none"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2 text-[11px] text-slate-400">
+                        <span id="prompt-token-est" class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">~120 tokens</span>
+                        <span class="text-emerald-400">✓ Đã nén thông minh</span>
+                    </div>
+                    <button onclick="sendAIPrompt()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-lg shadow-purple-600/20 transition">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Gửi AI Agent</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- TOKEN MANAGER MODAL -->
+    <div id="token-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-replit-panel border border-slate-700 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+                <h3 class="font-bold text-slate-100 flex items-center"><i class="fa-solid fa-coins text-amber-400 mr-2"></i> Trình Quản Lý & Bảo Vệ Token</h3>
+                <button onclick="closeTokenManager()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-sm">
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Gói tài khoản:</span>
+                        <span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 font-bold rounded-lg border border-amber-500/30 text-xs">ULTIMATE AI MAX (Miễn phí trọn đời)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Số token còn lại:</span>
+                        <span class="font-mono font-bold text-emerald-400">10,000 / 10,000 (Auto Refill)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Mức tiết kiệm Token Guard:</span>
+                        <span class="font-mono font-bold text-sky-400">85.4% (Đã tối ưu hóa prompt)</span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Cấu hình chống thất thoát token:</label>
+                    <div class="space-y-2 text-xs">
+                        <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                            <input type="checkbox" checked class="rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-0">
+                            <span>Tự động nén code trước khi gửi AI (Compact Mode)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                            <input type="checkbox" checked class="rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-0">
+                            <span>Chặn lặp prompt thừa & tự động cache kết quả</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                            <input type="checkbox" checked class="rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-0">
+                            <span>Giới hạn ngữ cảnh thông minh (Chỉ gửi file đang mở)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="px-5 py-3 bg-slate-950 border-t border-slate-800 flex justify-end">
+                <button onclick="closeTokenManager()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition">Đã hiểu & Lưu cài đặt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW FILE MODAL -->
+    <div id="new-file-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-replit-panel border border-slate-700 rounded-xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+                <h3 class="font-bold text-slate-100 text-sm">Tạo tệp mới</h3>
+                <button onclick="closeNewFileModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tên tệp (VD: style.css, script.js, about.html):</label>
+                    <input type="text" id="new-file-name" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-orange-500" placeholder="script.js">
+                </div>
+            </div>
+            <div class="px-5 py-3 bg-slate-950 border-t border-slate-800 flex justify-end space-x-2">
+                <button onclick="closeNewFileModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">Hủy</button>
+                <button onclick="confirmCreateFile()" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold">Tạo tệp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Default Project Files
+        let projectFiles = {
+            'index.html': `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạp Hóa Công Nghệ 99K</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="badge">🔥 Siêu Sale Công Nghệ</div>
+        <h1>Tạp Hóa Công Nghệ 99K</h1>
+        <p>Kho hàng tiện ích thông minh giá siêu hời cho mọi nhà!</p>
+        <button onclick="showAlert()">Khám phá ngay</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>`,
+            'style.css': `body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #f8fafc;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container {
+    text-align: center;
+    background: rgba(30, 41, 59, 0.7);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    max-width: 450px;
+}
+.badge {
+    background: #f26522;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+h1 { font-size: 26px; margin-bottom: 10px; color: #fff; }
+p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+button {
+    background: linear-gradient(135deg, #f26522, #d95318);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 15px rgba(242,101,34,0.4);
+}
+button:hover { transform: translateY(-2px); opacity: 0.9; }`,
+            'script.js': `function showAlert() {
+    alert("Chào mừng anh đến với Tạp Hóa Công Nghệ 99K! Mọi thứ đã sẵn sàng.");
+    console.log("[App] Người dùng đã click nút khám phá.");
+}`
+        };
+
+        let activeFile = 'index.html';
+        let openTabs = ['index.html'];
+        let editor;
+        let tokenGuardActive = true;
+        let savedTokensCount = 45280;
+
+        // Initialize CodeMirror
+        window.addEventListener('DOMContentLoaded', () => {
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor-textarea'), {
+                mode: 'htmlmixed',
+                theme: 'dracula',
+                lineNumbers: true,
+                autoCloseTags: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                tabSize: 4
+            });
+
+            editor.setValue(projectFiles[activeFile] || '');
+            editor.on('change', () => {
+                projectFiles[activeFile] = editor.getValue();
+            });
+
+            renderFileList();
+            renderEditorTabs();
+            runProject();
+        });
+
+        // Render File Tree
+        function renderFileList() {
+            const fileListEl = document.getElementById('file-list');
+            fileListEl.innerHTML = '';
+            Object.keys(projectFiles).forEach(filename => {
+                const isActive = filename === activeFile;
+                let icon = 'fa-file-code text-sky-400';
+                if (filename.endsWith('.css')) icon = 'fa-file-lines text-amber-400';
+                if (filename.endsWith('.js')) icon = 'fa-file-lines text-yellow-400';
+                
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition ${isActive ? 'bg-slate-800 text-white font-medium border border-slate-700' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate" onclick="switchFile('${filename}')">
+                        <i class="fa-solid ${icon}"></i>
+                        <span class="truncate">${filename}</span>
+                    </div>
+                    ${Object.keys(projectFiles).length > 1 ? `<button onclick="deleteFile('${filename}', event)" class="text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
+                `;
+                fileListEl.appendChild(div);
+            });
+        }
+
+        // Render Editor Tabs
+        function renderEditorTabs() {
+            const tabsEl = document.getElementById('editor-tabs');
+            tabsEl.innerHTML = '';
+            openTabs.forEach(filename => {
+                const isActive = filename === activeFile;
+                const tab = document.createElement('div');
+                tab.className = `flex items-center space-x-2 px-4 py-2 text-xs border-r border-replit-border cursor-pointer transition ${isActive ? 'bg-replit-dark text-slate-200 font-bold border-t-2 border-t-orange-500' : 'text-slate-400 hover:bg-slate-900'}`;
+                tab.innerHTML = `
+                    <span onclick="switchFile('${filename}')">${filename}</span>
+                    <i class="fa-solid fa-xmark text-slate-500 hover:text-white p-1 rounded" onclick="closeTab('${filename}', event)"></i>
+                `;
+                tabsEl.appendChild(tab);
+            });
+        }
+
+        // Switch Active File
+        function switchFile(filename) {
+            if (!projectFiles[filename]) return;
+            activeFile = filename;
+            if (!openTabs.includes(filename)) {
+                openTabs.push(filename);
+            }
+            editor.setValue(projectFiles[filename]);
+            
+            // Set CodeMirror mode
+            if (filename.endsWith('.html')) editor.setOption('mode', 'htmlmixed');
+            else if (filename.endsWith('.css')) editor.setOption('mode', 'css');
+            else if (filename.endsWith('.js')) editor.setOption('mode', 'javascript');
+
+            document.getElementById('active-file-path').innerText = filename;
+            renderFileList();
+            renderEditorTabs();
+        }
+
+        // Close Tab
+        function closeTab(filename, e) {
+            e.stopPropagation();
+            if (openTabs.length <= 1) return;
+            openTabs = openTabs.filter(f => f !== filename);
+            if (activeFile === filename) {
+                switchFile(openTabs[openTabs.length - 1]);
+            } else {
+                renderEditorTabs();
+            }
+        }
+
+        // Run Project (Preview)
+        function runProject() {
+            const iframe = document.getElementById('app-preview-frame');
+            let htmlContent = projectFiles['index.html'] || '';
+
+            // Inject CSS and JS files inline if referenced
+            if (projectFiles['style.css']) {
+                htmlContent = htmlContent.replace('<link rel="stylesheet" href="style.css">', `<style>${projectFiles['style.css']}</style>`);
+            }
+            if (projectFiles['script.js']) {
+                htmlContent = htmlContent.replace('<script src="script.js"><\/script>', `<script>${projectFiles['script.js']}<\/script>`);
+            }
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            iframe.src = URL.createObjectURL(blob);
+            
+            // Log to console
+            const consoleEl = document.getElementById('console-container');
+            const logItem = document.createElement('div');
+            logItem.className = 'text-slate-300';
+            logItem.innerHTML = `[${new Date().toLocaleTimeString()}] 🚀 App đã được biên dịch & chạy thành công.`;
+            consoleEl.appendChild(logItem);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function refreshPreview() {
+            runProject();
+        }
+
+        function switchPreviewTab(tab) {
+            const previewEl = document.getElementById('preview-container');
+            const consoleEl = document.getElementById('console-container');
+            const btnPreview = document.getElementById('tab-btn-preview');
+            const btnConsole = document.getElementById('tab-btn-console');
+
+            if (tab === 'preview') {
+                previewEl.classList.remove('hidden');
+                consoleEl.classList.add('hidden');
+                btnPreview.className = 'px-2 py-0.5 rounded bg-slate-800 text-white font-medium';
+                btnConsole.className = 'px-2 py-0.5 rounded hover:bg-slate-800 text-slate-400';
+            } else {
+                previewEl.classList.add('hidden');
+                consoleEl.classList.remove('hidden');
+                btnConsole.className = 'px-2 py-0.5 rounded bg-slate-800 text-white font-medium';
+                btnPreview.className = 'px-2 py-0.5 rounded hover:bg-slate-800 text-slate-400';
+            }
+        }
+
+        // New File Modal
+        function createNewFileModal() {
+            document.getElementById('new-file-modal').classList.remove('hidden');
+            document.getElementById('new-file-name').value = '';
+            document.getElementById('new-file-name').focus();
+        }
+        function closeNewFileModal() {
+            document.getElementById('new-file-modal').classList.add('hidden');
+        }
+        function confirmCreateFile() {
+            const filename = document.getElementById('new-file-name').value.trim();
+            if (!filename) return;
+            if (projectFiles[filename]) {
+                alert('Tệp này đã tồn tại!');
+                return;
+            }
+            projectFiles[filename] = '// Viết code tại đây...';
+            closeNewFileModal();
+            switchFile(filename);
+        }
+
+        function deleteFile(filename, e) {
+            e.stopPropagation();
+            if (Object.keys(projectFiles).length <= 1) return;
+            if (confirm(`Bạn có chắc chắn muốn xóa ${filename}?`)) {
+                delete projectFiles[filename];
+                openTabs = openTabs.filter(f => f !== filename);
+                if (!openTabs.length) openTabs = Object.keys(projectFiles);
+                switchFile(openTabs[0]);
+            }
+        }
+
+        function refreshFileTree() {
+            renderFileList();
+        }
+
+        // Export Project Zip
+        function exportProjectZip() {
+            const zip = new JSZip();
+            for (let filename in projectFiles) {
+                zip.file(filename, projectFiles[filename]);
+            }
+            zip.generateAsync({ type: "blob" }).then(content => {
+                saveAs(content, "replit-clone-project.zip");
+            });
+        }
+
+        // AI Agent & Token Guard Simulation
+        function toggleTokenGuard() {
+            tokenGuardActive = document.getElementById('token-guard-toggle').checked;
+            const statusEl = document.getElementById('token-guard-status');
+            if (tokenGuardActive) {
+                statusEl.innerText = "Bật (Tiết kiệm 85%)";
+                statusEl.className = "text-emerald-400";
+            } else {
+                statusEl.innerText = "Tắt (Tiêu chuẩn)";
+                statusEl.className = "text-amber-400";
+            }
+        }
+
+        function openTokenManager() {
+            document.getElementById('token-modal').classList.remove('hidden');
+        }
+        function closeTokenManager() {
+            document.getElementById('token-modal').classList.add('hidden');
+        }
+
+        function sendAIPrompt() {
+            const inputEl = document.getElementById('ai-prompt-input');
+            const prompt = inputEl.value.trim();
+            if (!prompt) return;
+
+            const chatContainer = document.getElementById('ai-chat-messages');
+            
+            // Append User Message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1 ml-4';
+            userMsg.innerHTML = `<div class="font-bold text-sky-400">Anh (User)</div><p class="text-slate-300">${prompt}</p>`;
+            chatContainer.appendChild(userMsg);
+
+            inputEl.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Simulate AI response with Token Guard optimization
+            setTimeout(() => {
+                savedTokensCount += 340;
+                document.getElementById('tokens-saved-counter').innerText = savedTokensCount.toLocaleString() + ' tokens';
+
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'bg-slate-900 p-2.5 rounded-lg border border-purple-900/50 space-y-2';
+                
+                let aiReply = `Em đã tiếp nhận yêu cầu và áp dụng <strong>Token Guard Optimizer</strong> để nén ngữ cảnh (tiết kiệm 86% token).`;
+                let generatedCodeNote = "";
+
+                if (prompt.toLowerCase().includes('giỏ hàng') || prompt.toLowerCase().includes('shop')) {
+                    projectFiles['script.js'] += `\n\n// Thêm tính năng giỏ hàng tự động\nfunction addToCart(productName) {\n    console.log("[Cart] Đã thêm sản phẩm: " + productName);\n    alert("Đã thêm " + productName + " vào giỏ hàng!");\n}`;
+                    generatedCodeNote = `<div class="bg-slate-950 p-2 rounded text-[11px] font-mono text-emerald-400 border border-slate-800">✨ Đã tự động cập nhật code vào file <strong>script.js</strong>!</div>`;
+                } else {
+                    projectFiles['script.js'] += `\n\n// Cập nhật từ AI Agent: ${prompt}\nconsole.log("[AI Agent] Hoàn thành yêu cầu.");`;
+                    generatedCodeNote = `<div class="bg-slate-950 p-2 rounded text-[11px] font-mono text-emerald-400 border border-slate-800">✨ AI đã viết xong code và cập nhật trực tiếp vào workspace!</div>`;
+                }
+
+                aiMsg.innerHTML = `
+                    <div class="font-bold text-purple-400 flex items-center justify-between">
+                        <span><i class="fa-solid fa-robot mr-1.5"></i> Replit AI Agent</span>
+                        <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">0.4s • 142 tokens</span>
+                    </div>
+                    <p class="text-slate-300">${aiReply}</p>
+                    ${generatedCodeNote}
+                `;
+                chatContainer.appendChild(aiMsg);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                runProject();
+                switchFile(activeFile);
+            }, 800);
+        }
+    </script>
+</body>
+</html>
